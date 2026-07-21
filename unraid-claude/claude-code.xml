@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!--
+  Unraid Docker template for Claude Code.
+
+  Unraid installs containers from an IMAGE, not a Dockerfile, so build the
+  image on the server ONCE, then this template manages it in the Docker tab.
+
+  1) Copy this kit to e.g. /mnt/user/appdata/claude-code
+  2) Build the image (SSH into Unraid):
+         cd /mnt/user/appdata/claude-code && docker build -t claude-code-unraid:latest .
+  3) Copy this file to the templates folder so it shows in the UI:
+         cp claude-code.xml /boot/config/plugins/dockerMan/templates-user/my-claude-code.xml
+  4) Unraid → Docker → Add Container → Template: "claude-code" → fill in the
+     API key + web-terminal login → Apply.
+
+  Reach the web terminal at http://<unraid-ip>:7681 over Tailscale/LAN only.
+-->
+<Container version="2">
+  <Name>claude-code</Name>
+  <Repository>claude-code-unraid:latest</Repository>
+  <Registry/>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support/>
+  <Project/>
+  <Overview>Claude Code running on your Unraid server as a password-protected browser terminal. Manages other containers via the Docker socket, reads flash config and shares, and can SSH to the host. Build the image locally first (docker build -t claude-code-unraid:latest .). Keep the WebUI on Tailscale/LAN only and set a password.</Overview>
+  <Category>Tools: Productivity:</Category>
+  <WebUI>http://[IP]:[PORT:7681]/</WebUI>
+  <TemplateURL/>
+  <Icon>https://avatars.githubusercontent.com/u/76263028?s=200&amp;v=4</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Requires/>
+  <Config Name="WebUI Port" Target="7681" Default="7681" Mode="tcp" Description="Port for the ttyd web terminal. Expose over Tailscale/LAN only." Type="Port" Display="always" Required="true" Mask="false">7681</Config>
+  <Config Name="Anthropic API Key" Target="ANTHROPIC_API_KEY" Default="" Mode="" Description="From console.anthropic.com. Leave blank to log in interactively with 'claude' on first run." Type="Variable" Display="always" Required="false" Mask="true"></Config>
+  <Config Name="Web Terminal Login (user:password)" Target="TTYD_CREDENTIAL" Default="admin:change-me-please" Mode="" Description="Login required to reach the web terminal. Format user:password. Set a real password." Type="Variable" Display="always" Required="true" Mask="true">admin:change-me-please</Config>
+  <Config Name="Timezone" Target="TZ" Default="Etc/UTC" Mode="" Description="e.g. America/New_York" Type="Variable" Display="advanced" Required="false" Mask="false">Etc/UTC</Config>
+  <Config Name="Workspace (config + history)" Target="/workspace" Default="/mnt/user/appdata/claude-code/workspace" Mode="rw" Description="Persists CLAUDE.md, Claude's login/config, and session history." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/claude-code/workspace</Config>
+  <Config Name="SSH keys (for host access)" Target="/root/.ssh" Default="/mnt/user/appdata/claude-code/ssh" Mode="ro" Description="A key here lets Claude 'ssh root@host' for host-level ops. Authorize its .pub on the host. Optional." Type="Path" Display="always" Required="false" Mask="false">/mnt/user/appdata/claude-code/ssh</Config>
+  <Config Name="Flash config (/boot)" Target="/boot" Default="/boot" Mode="rw" Description="Unraid's USB flash — the only persistent config store. Back it up before changes." Type="Path" Display="advanced" Required="true" Mask="false">/boot</Config>
+  <Config Name="User shares (/mnt/user)" Target="/mnt/user" Default="/mnt/user" Mode="rw" Description="Your shares and appdata." Type="Path" Display="advanced" Required="true" Mask="false">/mnt/user</Config>
+  <Config Name="Docker socket" Target="/var/run/docker.sock" Default="/var/run/docker.sock" Mode="rw" Description="Lets Claude manage other containers with the docker CLI. Grants full control of Docker on the host." Type="Path" Display="advanced" Required="true" Mask="false">/var/run/docker.sock</Config>
+</Container>

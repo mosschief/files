@@ -22,6 +22,7 @@ flash config, and can SSH to the host for the deeper stuff.
 | `docker-compose.yml` | The container definition and host mounts. |
 | `claude-guardrails.md` | Unraid-aware `CLAUDE.md` (seeded into the workspace) that keeps Claude from doing something reboot-fragile or destructive. **Read this.** |
 | `.env.example` | API key + web-terminal password. Copy to `.env`. |
+| `claude-code.xml` | Unraid **Add Container** template — manage it from the Docker tab UI instead of compose. |
 
 ## Prerequisites
 
@@ -81,6 +82,26 @@ docker run -d --name claude-code --restart unless-stopped \
   -v /var/run/docker.sock:/var/run/docker.sock \
   claude-code-unraid
 ```
+
+### Prefer the Unraid Docker tab UI? Use the template
+
+`claude-code.xml` lets you manage the container from **Docker → Add Container**
+(start/stop, logs, edit variables) instead of compose. Because Unraid installs
+from an image, build it once, then register the template:
+
+```bash
+cd /mnt/user/appdata/claude-code
+docker build -t claude-code-unraid:latest .
+cp claude-code.xml /boot/config/plugins/dockerMan/templates-user/my-claude-code.xml
+```
+
+Then in the Unraid UI: **Docker → Add Container**, pick the **claude-code**
+template from the *Template* dropdown, fill in your **Anthropic API Key** and
+**Web Terminal Login**, and click **Apply**. Set up the `ssh/` folder (step 2
+above) first if you want host access.
+
+> Rebuild after an update with `docker build -t claude-code-unraid:latest .`,
+> then hit **Force Update** (or restart) on the container in the Docker tab.
 
 ## First things to try
 

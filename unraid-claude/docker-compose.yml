@@ -1,0 +1,29 @@
+# Claude Code for Unraid — run with the "Compose Manager" plugin (Community
+# Applications) or `docker compose up -d` from an SSH session on the server.
+#
+# What the mounts give Claude:
+#   /boot        -> Unraid's USB flash: the ONLY persistent config store.
+#   /mnt/user    -> your user shares (appdata, media, etc.).
+#   docker.sock  -> manage other containers with the `docker` CLI.
+#   ./ssh        -> a key so Claude can `ssh root@<host>` for host-level ops.
+#   ./workspace  -> persists CLAUDE.md, Claude's config, and its history.
+services:
+  claude-code:
+    build: .
+    image: claude-code-unraid:latest
+    container_name: claude-code
+    restart: unless-stopped
+    ports:
+      - "7681:7681"          # web terminal — reach it over Tailscale/LAN only
+    environment:
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:?set this in .env}"
+      TTYD_CREDENTIAL: "${TTYD_CREDENTIAL:?set user:pass in .env}"
+      TZ: "${TZ:-Etc/UTC}"
+    volumes:
+      - ./workspace:/workspace
+      - ./ssh:/root/.ssh:ro
+      - /boot:/boot
+      - /mnt/user:/mnt/user
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Optional read-only visibility into host logs:
+      # - /var/log:/host/var/log:ro

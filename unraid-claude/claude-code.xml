@@ -5,6 +5,10 @@
   Unraid installs containers from an IMAGE, not a Dockerfile, so build the
   image on the server ONCE, then this template manages it in the Docker tab.
 
+  NO-BUILD OPTION: if you've run the GitHub Actions workflow (see README), set
+  <Repository> below to ghcr.io/<your-user>/claude-code-unraid:latest instead
+  and skip step 2 — Unraid will just pull it.
+
   1) Copy this kit to e.g. /mnt/user/appdata/claude-code
   2) Build the image (SSH into Unraid):
          cd /mnt/user/appdata/claude-code && docker build -t claude-code-unraid:latest .

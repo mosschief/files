@@ -83,6 +83,31 @@ docker run -d --name claude-code --restart unless-stopped \
   claude-code-unraid
 ```
 
+### No build step: pull the prebuilt image (GitHub Actions → GHCR)
+
+The workflow at `.github/workflows/build-unraid-image.yml` builds this image on
+every push to `unraid-claude/**` and publishes it to GitHub Container Registry:
+
+```
+ghcr.io/<your-github-username>/claude-code-unraid:latest
+```
+
+One-time setup after the first successful run (Actions tab → *Build Claude Code
+Unraid image*):
+
+1. **Make the package pullable by Unraid.** Easiest: open the package at
+   `github.com/users/<you>/packages/container/claude-code-unraid`, *Package
+   settings → Change visibility → Public*. (To keep it private instead, run
+   `docker login ghcr.io` on the Unraid box with a GitHub token that has
+   `read:packages`.)
+2. **Point the container at it** — either edit `docker-compose.yml`
+   (`image: ghcr.io/<you>/claude-code-unraid:latest`, and drop the `build:`
+   line), or set the **Repository** field in the Unraid template to the same.
+   No `docker build` on the server needed; update with **Force Update**.
+
+You can also trigger a rebuild manually from the Actions tab
+(*Run workflow* → `workflow_dispatch`).
+
 ### Prefer the Unraid Docker tab UI? Use the template
 
 `claude-code.xml` lets you manage the container from **Docker → Add Container**

@@ -1,0 +1,75 @@
+name: Build Claude Code Unraid image
+
+# Builds unraid-claude/Dockerfile and pushes it to GitHub Container Registry
+# (GHCR) so the Unraid container can be pulled instead of built on the server.
+# Image: ghcr.io/<owner>/claude-code-unraid:latest
+
+on:
+  push:
+    branches:
+      - claude/unraid-server-interface-hbfp9r
+      - master
+      - main
+    paths:
+      - unraid-claude/**
+      - .github/workflows/build-unraid-image.yml
+  workflow_dispatch: {}   # lets you run it manually from the Actions tab
+
+concurrency:
+  group: build-unraid-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write       # required to push to GHCR with GITHUB_TOKEN
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive lowercase image name
+        id: img
+        run: echo "name=ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/claude-code-unraid" >> "$GITHUB_OUTPUT"
+
+      - name: Docker metadata (tags + labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.img.outputs.name }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+            type=ref,event=branch
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: unraid-claude
+          file: unraid-claude/Dockerfile
+          platforms: linux/amd64   # Unraid is x86_64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Summary
+        run: |
+          echo "### Pushed image :rocket:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ steps.meta.outputs.tags }}" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "Pull with: docker pull ${{ steps.img.outputs.name }}:latest" >> "$GITHUB_STEP_SUMMARY"
